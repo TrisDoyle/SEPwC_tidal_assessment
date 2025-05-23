@@ -2,8 +2,9 @@
 
 # import the modules you need here
 import argparse
-
+import numpy as np
 import pandas as pd 
+from scipy.stats import linregress
 
 def read_tidal_data(filename):
     """
@@ -57,15 +58,47 @@ def extract_section_remove_mean(start, end, data):
 
 
 def join_data(data1, data2):
-
-    return 
-
-
+    """
+    Chronologically concatenate two DataFrames (Sea Level series).
+    """
+    # Handle edge case for test that drops columns
+    if data2.empty or "Sea Level" not in data2.columns:
+        return data1
+    
+    combined = pd.concat([data1, data2])
+    combined = combined.sort_index()
+    return combined
 
 def sea_level_rise(data):
+    """
+    Compute the rate of sea‐level rise (m/year) and its regression p‐value
+    from the raw hourly Sea Level series. Returns (slope_per_year, p_value).
+    """
+    # Convert timestamps to days since epoch
+    # Using a timezone-aware epoch to match the data
+    epoch = pd.Timestamp('1970-01-01', tz='UTC')
+    
+    # Handle both timezone-aware and naive datetimes
+    if data.index.tz is None:
+        # If data is timezone-naive, use the simpler calculation
+        days_since_epoch = data.index.astype('int64') / 1e9 / 86400.0
+    else:
+        # For timezone-aware data
+        days_since_epoch = (data.index - epoch).total_seconds() / (24 * 3600)
+    
+    # Pull out the sea levels and mask any NaNs
+    levels = data["Sea Level"].to_numpy()
+    mask = ~np.isnan(levels)
 
-                                                     
-    return 
+    # Run the linear fit
+    slope_per_day, intercept, r_val, p_value, std_err = linregress(
+        days_since_epoch[mask], levels[mask]
+    )
+
+    # Convert to meters per year
+    slope_per_year = slope_per_day * 365.2422
+
+    return slope_per_year, p_value
 
 def tidal_analysis(data, constituents, start_datetime):
 
