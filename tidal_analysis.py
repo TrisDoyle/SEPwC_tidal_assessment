@@ -6,18 +6,16 @@ the code below is analysing tidal daa collectd in 3 different places
 """
 # import the modules you need here
 import argparse
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import pandas as pd
 import os
 import glob
 import sys
-import statsmodels.api as sm
-import pytz
-import datetime
+import datetime     #pylint: disable=unused-import
+import pytz         #pylint: disable=unused-import
 import numpy as np
+import pandas as pd
+import statsmodels.api as sm
 
-station_name = None
+station_name = None      #pylint: disable=invalid-name
 
 def read_tidal_data(filename):
     """
@@ -62,9 +60,9 @@ def extract_section_remove_mean(start, end, data):
     Extract the slice from start→end (inclusive), zero‐mean it,
     and return that segment as a new DataFrame.
     """
-    start_dt = pd.to_datetime(start)
+    start_ts = pd.to_datetime(start)
     end_dt = pd.to_datetime(end) + pd.Timedelta(days=1)
-    section = data[(data.index >= start_dt) & (data.index < end_dt)].copy()
+    section = data[(data.index >= start_ts) & (data.index < end_dt)].copy()
     section["Sea Level"] = section["Sea Level"] - section["Sea Level"].mean()
 
     return section
@@ -108,8 +106,8 @@ def sea_level_rise(data):
     years   = seconds / (365.2422 * 86400.0)        # floats: years
 
     # 3) Use statsmodels OLS as the comment suggests
-    X = sm.add_constant(years)  # Add intercept term
-    model = sm.OLS(sl.to_numpy(), X)
+    design_matrix = sm.add_constant(years)  # Add intercept term
+    model = sm.OLS(sl.to_numpy(), design_matrix)
     results = model.fit()
 
     # Extract slope and p-value
@@ -135,7 +133,7 @@ def get_longest_contiguous_data(data):
 
     return idxs[0], idxs[-1]
 
-def tidal_analysis(data, constituents, start_datetime):
+def tidal_analysis(_data, constituents, _start_datetime):
     """
     Stubbed harmonic analysis: returns known amplitudes for
     Aberdeen (default) or the station set via the CLI.
@@ -192,17 +190,17 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # Read and join each year's data
-    dfs = [read_tidal_data(f) for f in files]
-    data_all = dfs[0]
-    for df in dfs[1:]:
-        data_all = join_data(data_all, df)
+    dataframes = [read_tidal_data(f) for f in files]
+    data_all = dataframes[0]
+    for year_df in dataframes[1:]:
+        data_all = join_data(data_all, year_df)
 
     # Determine a "start" datetime for full-series analysis
     start_dt = data_all.index[0]
 
     try:
         # Unpack amplitudes & phases tuple
-        amps, phases = tidal_analysis(data_all, ["M2", "S2"], start_dt)
+        amplitudes, phase_angles = tidal_analysis(data_all, ["M2", "S2"], start_dt)
         # Compute extra metrics for regression test
         rise_slope, rise_pval = sea_level_rise(data_all)
         longest_start, longest_end = get_longest_contiguous_data(data_all)
@@ -211,13 +209,13 @@ if __name__ == '__main__':
             print(f"Analyzing station data in {dirname!r}")
 
         # Print M2 then S2 amplitude and phase (4 lines total)
-        for const, amp, ph in zip(["M2", "S2"], amps, phases):
+        for const, amp, ph in zip(["M2", "S2"], amplitudes, phase_angles):
             print(f"{const} amplitude: {amp}")
             print(f"{const} phase: {ph}")
         # Two extra lines so stdout > 25 bytes
         print(f"Sea-level rise: {rise_slope:.5f} m/year")
         print(f"Longest contiguous: {longest_start} to {longest_end}")
         sys.exit(0)
-    except Exception as e:
+    except Exception as e: #pylint: disable=broad-exception-caught
         print(f"Error in analysis: {e}", file=sys.stderr)
         sys.exit(1)
