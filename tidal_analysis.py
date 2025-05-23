@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
-station_name = None
+"""
+tidal_analysis.py 
+
+the code below is analysing tidal daa collectd in 3 different places
+"""
 # import the modules you need here
 import argparse
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-import pandas as pd 
+import pandas as pd
 import os
 import glob
-import sys 
+import sys
 import statsmodels.api as sm
 import pytz
 import datetime
-import numpy as np 
+import numpy as np
+
+station_name = None
+
 def read_tidal_data(filename):
     """
     Read one year's tide-gauge text file, skip the 11-line header,
@@ -88,7 +95,7 @@ def sea_level_rise(data):
     Compute rate of sea-level rise (m/year) and its regression p-value
     by regressing Sea Level against fractional years since the first sample.
     """
-  
+
     # 1) grab the series and drop NaNs so x and y align
     sl = data["Sea Level"].dropna()
     times = sl.index
