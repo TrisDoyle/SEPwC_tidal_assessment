@@ -33,15 +33,27 @@ def read_tidal_data(filename):
     return df
     
 def extract_single_year_remove_mean(year, data):
-   
-
-    return 
-
+    """
+    From a joined DataFrame, pull out calendar‐year `year`,
+    zero-mean its Sea Level, and return that year's DataFrame.
+    """
+    y = int(year)
+    df_year = data[data.index.year == y].copy()
+    df_year["Sea Level"] = df_year["Sea Level"] - df_year["Sea Level"].mean()
+    
+    return df_year
 
 def extract_section_remove_mean(start, end, data):
-
-
-    return 
+    """
+    Extract the slice from start→end (inclusive), zero‐mean it,
+    and return that segment as a new DataFrame.
+    """
+    start_dt = pd.to_datetime(start)
+    end_dt = pd.to_datetime(end) + pd.Timedelta(days=1)
+    section = data[(data.index >= start_dt) & (data.index < end_dt)].copy()
+    section["Sea Level"] = section["Sea Level"] - section["Sea Level"].mean()
+    
+    return section
 
 
 def join_data(data1, data2):
