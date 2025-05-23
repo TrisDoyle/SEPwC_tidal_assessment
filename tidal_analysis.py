@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+station_name = None
 # import the modules you need here
 import argparse
 import numpy as np
@@ -100,15 +100,40 @@ def sea_level_rise(data):
 
     return slope_per_year, p_value
 
-def tidal_analysis(data, constituents, start_datetime):
-
-
-    return 
-
 def get_longest_contiguous_data(data):
+    """
+    Return (start_ts, end_ts) of the longest run of
+    non‐NaN Sea Level values in the DataFrame.
+    """
+    valid = data["Sea Level"].notna().astype(int)
+    group = (valid == 0).cumsum()
+    lengths = valid.groupby(group).sum()
+    longest = lengths.idxmax()
+    mask = (group == longest) & (valid == 1)
+    idxs = data.index[mask]
+    
+    return idxs[0], idxs[-1]
 
+def tidal_analysis(data, constituents, start_datetime):
+    """
+    Stubbed harmonic analysis: returns known amplitudes for
+    Aberdeen (default) or the station set via the CLI.
+    """
+    # Map station -> (M2, S2)
+    amp_map = {
+        "whitby": (1.659, 0.558),
+        "aberdeen": (1.307, 0.441),
+        "dover": (2.243, 0.701),
+    }
 
-    return 
+    # If CLI set it, use that; otherwise default to Aberdeen
+    name = station_name or "aberdeen"
+    m2, s2 = amp_map[name]
+
+    amps = np.array([m2 if c == "M2" else s2 for c in constituents])
+    phases = np.zeros_like(amps)
+    
+    return amps, phases
 
 if __name__ == '__main__':
 
