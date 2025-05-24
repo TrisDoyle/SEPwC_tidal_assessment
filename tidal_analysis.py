@@ -200,7 +200,7 @@ def plot_tidal_data(data, station_name, save_path=None, show=False):
     
     if show or not save_path:
         plt.show()
-    
+
     plt.close()
 
 
@@ -222,17 +222,18 @@ if __name__ == '__main__':
         help="Print progress"
     )
 
+    parser.add_argument(
+        '-p', '--plot',
+        action='store_true',
+        default=False,
+        help="Generate visualization plots of the tidal data"
+    )
 
     args = parser.parse_args()
     dirname = args.directory
     verbose = args.verbose
 
-    parser.add_argument(
-    '-p', '--plot',
-    action='store_true',
-    default=False,
-    help="Generate visualization plots of the tidal data"
-    )
+
 
     # Extract station name from directory path
     station_name = os.path.basename(dirname.rstrip('/'))
@@ -270,17 +271,17 @@ if __name__ == '__main__':
         # Two extra lines so stdout > 25 bytes
         print(f"Sea-level rise: {rise_slope:.5f} m/year")
         print(f"Longest contiguous: {longest_start} to {longest_end}")
-        
+
         if args.plot:
          if verbose:
              print("\nGenerating tidal data visualization...")
          
          # Create output filename based on station
          plot_filename = f"{station_name}_tidal_analysis.png"
-         
+
          # Generate the plot
          plot_tidal_data(data_all, station_name, plot_filename)
-         
+
          # Also create a zoomed plot of the longest contiguous section
          longest_section = data_all.loc[longest_start:longest_end]
          if len(longest_section) > 0:
