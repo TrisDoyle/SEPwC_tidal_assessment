@@ -158,26 +158,27 @@ def tidal_analysis(_data, constituents, _start_datetime):
 
     return amps, phases
 
-def plot_tidal_data(data, station_name, save_path=None, show=False):
+def plot_tidal_data(data, station, save_path=None, show=False):
     """
     Create a professional visualization of tidal data.
     Shows raw data, rolling mean, and highlights missing data.
     """
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
-    
+    _, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+
     # Plot 1: Full time series with rolling mean
     valid_data = data["Sea Level"].dropna()
-    ax1.plot(valid_data.index, valid_data.values, 'b-', alpha=0.5, linewidth=0.5, label='Hourly data')
-    
+    ax1.plot(valid_data.index, valid_data.values, 'b-',
+         alpha=0.5, linewidth=0.5, label='Hourly data')
+
     # Add 24-hour rolling mean for clarity
     rolling_mean = data["Sea Level"].rolling(window=24, center=True).mean()
     ax1.plot(rolling_mean.index, rolling_mean.values, 'r-', linewidth=2, label='24-hour mean')
-    
+
     ax1.set_ylabel('Sea Level (m)')
-    ax1.set_title(f'Tidal Gauge Data - {station_name.title()}')
+    ax1.set_title(f'Tidal Gauge Data - {station.title()}')
     ax1.legend()
     ax1.grid(True, alpha=0.3)
-    
+
     # Plot 2: Data availability
     availability = data["Sea Level"].notna().astype(int)
     ax2.fill_between(availability.index, 0, availability.values, alpha=0.7, color='green')
@@ -185,19 +186,18 @@ def plot_tidal_data(data, station_name, save_path=None, show=False):
     ax2.set_ylim(0, 1.1)
     ax2.set_xlabel('Date')
     ax2.set_title('Data Availability (Green = Available)')
-    
+
     # Format x-axis
     ax2.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
     ax2.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
     plt.xticks(rotation=45)
-    
+
     plt.tight_layout()
-    
+
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        if verbose:
-            print(f"Plot saved to: {save_path}")
-    
+        print(f"Plot saved to: {save_path}")
+
     if show or not save_path:
         plt.show()
 
@@ -273,20 +273,24 @@ if __name__ == '__main__':
         print(f"Longest contiguous: {longest_start} to {longest_end}")
 
         if args.plot:
-         if verbose:
-             print("\nGenerating tidal data visualization...")
-         
-         # Create output filename based on station
-         plot_filename = f"{station_name}_tidal_analysis.png"
+            if verbose:
+                print("\nGenerating tidal data visualization...")
 
-         # Generate the plot
-         plot_tidal_data(data_all, station_name, plot_filename)
+            # Create output filename based on station
+            PLOT_FILENAME = f"{station_name}_tidal_analysis.png"
 
-         # Also create a zoomed plot of the longest contiguous section
-         longest_section = data_all.loc[longest_start:longest_end]
-         if len(longest_section) > 0:
-             plot_filename_zoom = f"{station_name}_longest_section.png"
-             plot_tidal_data(longest_section, f"{station_name} (Longest Section)", plot_filename_zoom)
+            # Generate the plot
+            plot_tidal_data(data_all, station_name, PLOT_FILENAME)
+
+            # Also create a zoomed plot of the longest contiguous section
+            longest_section = data_all.loc[longest_start:longest_end]
+            if len(longest_section) > 0:
+                PLOT_FILENAME_ZOOM = f"{station_name}_longest_section.png"
+                plot_tidal_data(
+                    longest_section,
+                    f"{station_name} (Longest Section)",
+                    PLOT_FILENAME_ZOOM
+                )
         sys.exit(0)
     except Exception as e: #pylint: disable=broad-exception-caught
         print(f"Error in analysis: {e}", file=sys.stderr)
