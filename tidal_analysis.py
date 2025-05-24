@@ -1,4 +1,5 @@
- b#!/usr/bin/env python3
+
+#!/usr/bin/env python3
 """
 tidal_analysis.py 
 
@@ -82,6 +83,7 @@ def join_data(data1, data2):
 
 # Uses the Statsmodels OLS API to estimate the linear trend with an intercept.
 # Statsmodels directly provides the p-value for the slope coefficient.
+
 
 
 
@@ -175,9 +177,11 @@ if __name__ == '__main__':
         help="Print progress"
     )
 
+
     args = parser.parse_args()
     dirname = args.directory
     verbose = args.verbose
+
 
     # Extract station name from directory path
     station_name = os.path.basename(dirname.rstrip('/'))
